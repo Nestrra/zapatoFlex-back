@@ -55,22 +55,59 @@ Variables principales:
 
 Los datos de usuarios se mantienen en memoria (se pierden al reiniciar). La persistencia con BD se añadirá en el siguiente paso.
 
+## Despliegue en Vercel (con GitHub)
+
+El proyecto está preparado para desplegarse en Vercel como función serverless.
+
+### 1. Subir el código a GitHub
+
+- Crea un repositorio en GitHub (por ejemplo `zapatoflex-back` o el monorepo con la carpeta `zapatoFlex-Back`).
+- Si el backend está en una **carpeta** dentro del repo (ej. `Actividad2Unidad1/zapatoFlex-Back`), anótalo; en Vercel deberás indicar esa carpeta como **Root Directory**.
+
+### 2. Conectar el proyecto en Vercel
+
+1. Entra en [vercel.com](https://vercel.com) e inicia sesión (con tu cuenta de GitHub).
+2. **Add New** → **Project**.
+3. **Import Git Repository**: elige el repositorio donde está el backend.
+4. **Configure Project**:
+   - **Root Directory:** si el backend está en una subcarpeta (ej. `zapatoFlex-Back`), haz clic en **Edit** y selecciona esa carpeta.
+   - **Framework Preset:** Other (o None).
+   - **Build Command:** vacío (o `npm run build` si más adelante añades un script de build).
+   - **Output Directory:** vacío.
+   - **Install Command:** `npm install`.
+5. **Environment Variables (opcional):** si usas variables (p. ej. `API_PREFIX`), añádelas en **Environment Variables** (Name / Value). En Vercel no hace falta `PORT`.
+6. Pulsa **Deploy**.
+
+### 3. Después del despliegue
+
+- Vercel te dará una URL como `https://zapatoflex-back-xxx.vercel.app`.
+- Prueba:
+  - `GET https://tu-url.vercel.app/` — info de la API.
+  - `GET https://tu-url.vercel.app/health` — health check.
+  - `POST https://tu-url.vercel.app/api/v1/auth/register` — registro (Body JSON como en local).
+
+Cada **push** a la rama conectada (p. ej. `main`) generará un nuevo despliegue automático.
+
+### Nota
+
+En Vercel el backend corre como **serverless**: cada petición puede ejecutarse en una instancia distinta. Los usuarios guardados en memoria **no se comparten** entre peticiones y se pierden. Para producción necesitarás base de datos (Paso B de Auth o un servicio como Vercel Postgres, PlanetScale, etc.).
+
 ## Estructura del proyecto (actual)
 
 ```
 zapatoFlex-Back/
-├── config/              # Configuración (env, constantes)
+├── api/                 # Entrada serverless para Vercel
+│   └── index.js
+├── config/
 ├── src/
 │   ├── modules/
-│   │   └── auth/        # Módulo de autenticación
-│   │       ├── auth.controller.js
-│   │       ├── auth.routes.js
-│   │       └── auth.service.js
-│   ├── app.js           # Creación de la app Express
-│   └── index.js         # Punto de entrada
+│   │   └── auth/
+│   ├── app.js
+│   └── index.js
 ├── .env.example
 ├── .gitignore
 ├── package.json
+├── vercel.json          # Configuración Vercel (rewrites, build)
 └── README.md
 ```
 
