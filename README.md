@@ -39,21 +39,35 @@ Variables principales:
   npm start
   ```
 
-## Endpoints disponibles (configuración inicial)
+## Endpoints disponibles
 
+### Globales
 - `GET /` — Información de la API
 - `GET /health` — Health check para despliegue y balanceadores
 
-Los módulos (auth, catalog, cart, orders, payments, inventory) se irán añadiendo por fases.
+### Auth (módulo actual – sin BD, en memoria)
+- `POST /api/v1/auth/register` — Registro de usuario  
+  Body: `{ "email", "password", "firstName?", "lastName?" }`  
+  Respuesta 201: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role", "createdAt" } }`
+- `POST /api/v1/auth/login` — Inicio de sesión  
+  Body: `{ "email", "password" }`  
+  Respuesta 200: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role" } }`
+
+Los datos de usuarios se mantienen en memoria (se pierden al reiniciar). La persistencia con BD se añadirá en el siguiente paso.
 
 ## Estructura del proyecto (actual)
 
 ```
 zapatoFlex-Back/
-├── config/          # Configuración (env, constantes)
+├── config/              # Configuración (env, constantes)
 ├── src/
-│   ├── app.js       # Creación de la app Express
-│   └── index.js     # Punto de entrada, arranque del servidor
+│   ├── modules/
+│   │   └── auth/        # Módulo de autenticación
+│   │       ├── auth.controller.js
+│   │       ├── auth.routes.js
+│   │       └── auth.service.js
+│   ├── app.js           # Creación de la app Express
+│   └── index.js         # Punto de entrada
 ├── .env.example
 ├── .gitignore
 ├── package.json

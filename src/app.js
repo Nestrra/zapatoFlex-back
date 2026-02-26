@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import config from '../config/index.js';
+import authRoutes from './modules/auth/auth.routes.js';
 
 /**
  * Creates and configures the Express application.
- * No business modules yet - only global middleware and a health check.
  */
 function createApp() {
   const app = express();
@@ -26,6 +26,9 @@ function createApp() {
       health: '/health',
     });
   });
+
+  // API v1: modules
+  app.use(`${config.apiPrefix}/auth`, authRoutes);
 
   return app;
 }
