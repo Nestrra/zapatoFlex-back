@@ -24,3 +24,6 @@ Thumbs.db
 # Build / coverage (if we add later)
 dist/
 coverage/
+
+# Vercel
+.vercel
