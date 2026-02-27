@@ -56,9 +56,45 @@ Variables principales:
   Respuesta 201: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role", "createdAt", ... } }`
 - `POST /api/v1/auth/login` — Inicio de sesión  
   Body: `{ "email", "password" }`  
-  Respuesta 200: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role", ... } }`
+  Respuesta 200: `{ "success": true, "user": { ... }, "token": "<JWT>" }`  
+  El **token** se usa en el header `Authorization: Bearer <token>` para rutas que exigen rol ADMIN.
 
 Requiere PostgreSQL configurado (variables `DB_*` o `DATABASE_URL`) y la tabla `users` creada (ver `sql/001_auth_users_simple.sql`).
+
+### Catálogo (productos e inventario)
+
+Todos los precios están en **pesos colombianos (COP)**. Las respuestas incluyen `"currency": "COP"` en cada producto.
+
+- `GET /api/v1/products` — Lista productos activos con stock (solo productos que tengan al menos una talla con cantidad > 0).  
+  Query: `?category=casual` | `?category=deportivo` | `?category=formal` (opcional).  
+  Respuesta 200: `{ "products": [ { "id", "name", "description", "price", "currency": "COP", "category", "imageUrl", ... } ] }`
+- `GET /api/v1/products/:id` — Detalle de un producto con inventario por talla.  
+  Respuesta 200: `{ "id", "name", "description", "price", "currency": "COP", "category", "imageUrl", "inventory": [ { "size", "quantity" }, ... ] }`  
+  404 si no existe o está inactivo.
+
+Requiere tablas `products` e `inventory` (ver `sql/002_catalog_products_inventory.sql`). Categorías para filtro: **casual**, **deportivo**, **formal**.
+
+#### CRUD productos (solo rol ADMIN)
+
+Todas estas rutas requieren header **`Authorization: Bearer <token>`** con el JWT obtenido al hacer login como usuario ADMIN.
+
+- **Crear producto (y tallas)**  
+  `POST /api/v1/products`  
+  Body: `{ "name", "description", "price", "category", "imageUrl?", "inventory": [ { "size": "38", "quantity": 10 }, ... ] }`  
+  **price** en pesos colombianos (COP).  
+  `category`: `casual` | `deportivo` | `formal`.  
+  `inventory`: array de talla y cantidad; si se omite, el producto queda sin stock hasta que se actualice.
+
+- **Actualizar producto**  
+  `PUT /api/v1/products/:id`  
+  Body (todos opcionales): `{ "name?", "description?", "price?", "category?", "imageUrl?", "active?", "inventory?": [ { "size", "quantity" }, ... ] }`  
+  Si se envía **inventory**, se **reemplazan** todas las tallas del producto.
+
+- **Eliminar producto (baja lógica)**  
+  `DELETE /api/v1/products/:id`  
+  Pone `active = false`; el producto deja de aparecer en el listado público.
+
+**Tallas:** se gestionan con el array `inventory`: cada elemento es `{ "size": "36"|"37"|...|"42"|"M"|"L"|..., "quantity": number }`. En creación se envían todas las tallas deseadas; en actualización, si se envía `inventory`, se sustituye por completo el inventario de ese producto.
 
 ## Despliegue en Vercel (con GitHub)
 
@@ -111,6 +147,11 @@ zapatoFlex-Back/
 │   │       ├── auth.repository.js   # Acceso a BD (tabla users)
 │   │       ├── auth.routes.js
 │   │       └── auth.service.js
+│   │   └── catalog/                 # Módulo catálogo
+│   │       ├── catalog.controller.js
+│   │       ├── catalog.repository.js
+│   │       ├── catalog.routes.js
+│   │       └── catalog.service.js
 │   ├── app.js
 │   └── index.js
 ├── .env.example

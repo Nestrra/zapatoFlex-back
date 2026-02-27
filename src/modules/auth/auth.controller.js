@@ -1,7 +1,7 @@
 import authService from './auth.service.js';
 
 function register(req, res) {
-  const { email, password, firstName, lastName } = req.body;
+  const { email, password, firstName, lastName, role } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'EMAIL_AND_PASSWORD_REQUIRED' });
@@ -11,7 +11,7 @@ function register(req, res) {
   }
 
   authService
-    .register({ email, password, firstName, lastName })
+    .register({ email, password, firstName, lastName, role })
     .then((result) => {
       if (!result.success) {
         if (result.error === 'EMAIL_ALREADY_EXISTS') {
