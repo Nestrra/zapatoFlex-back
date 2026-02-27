@@ -75,6 +75,37 @@ async function findById(id, { includeInactive = false } = {}) {
 }
 
 /**
+ * Stock disponible para un producto y talla (para validar carrito).
+ */
+async function getAvailableStock(productId, size) {
+  const pool = db.getPool();
+  const result = await pool.query(
+    `SELECT quantity FROM ${INVENTORY} WHERE product_id = $1 AND size = $2 LIMIT 1`,
+    [productId, String(size).trim()]
+  );
+  return result.rows[0] ? Number(result.rows[0].quantity) : 0;
+}
+
+/**
+ * Descuenta stock (para checkout). Lanza si no hay suficiente.
+ */
+async function deductStock(productId, size, quantity) {
+  const pool = db.getPool();
+  const result = await pool.query(
+    `UPDATE ${INVENTORY}
+     SET quantity = quantity - $3, updated_at = now()
+     WHERE product_id = $1 AND size = $2 AND quantity >= $3
+     RETURNING *`,
+    [productId, String(size).trim(), quantity]
+  );
+  if (result.rowCount === 0) {
+    const available = await getAvailableStock(productId, size);
+    throw new Error(`INSUFFICIENT_STOCK:${available}`);
+  }
+  return result.rows[0];
+}
+
+/**
  * Crea un producto y sus filas de inventario (tallas).
  * product: { name, description, price, category, imageUrl? }
  * inventory: [ { size, quantity }, ... ]
@@ -174,6 +205,8 @@ async function remove(id) {
 export default {
   findAll,
   findById,
+  getAvailableStock,
+  deductStock,
   create,
   update,
   remove,
