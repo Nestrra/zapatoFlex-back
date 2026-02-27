@@ -4,6 +4,8 @@ import config from '../config/index.js';
 import db from './db/client.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import catalogRoutes from './modules/catalog/catalog.routes.js';
+import cartRoutes from './modules/cart/cart.routes.js';
+import orderRoutes from './modules/order/order.routes.js';
 
 /**
  * Creates and configures the Express application.
@@ -42,6 +44,8 @@ function createApp() {
   // API v1: modules
   app.use(`${config.apiPrefix}/auth`, authRoutes);
   app.use(`${config.apiPrefix}/products`, catalogRoutes);
+  app.use(`${config.apiPrefix}/cart`, cartRoutes);
+  app.use(`${config.apiPrefix}/orders`, orderRoutes);
 
   return app;
 }

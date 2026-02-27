@@ -96,6 +96,32 @@ Todas estas rutas requieren header **`Authorization: Bearer <token>`** con el JW
 
 **Tallas:** se gestionan con el array `inventory`: cada elemento es `{ "size": "36"|"37"|...|"42"|"M"|"L"|..., "quantity": number }`. En creación se envían todas las tallas deseadas; en actualización, si se envía `inventory`, se sustituye por completo el inventario de ese producto.
 
+### Carrito (requiere Auth)
+
+Todas las rutas exigen **`Authorization: Bearer <token>`** (usuario logueado, no necesariamente ADMIN). Precios en COP.
+
+- `GET /api/v1/cart` — Obtiene el carrito del usuario con ítems (productName, size, quantity, unitPrice, subtotal) y subtotal total.
+- `POST /api/v1/cart/items` — Añade un ítem. Body: `{ "productId", "size", "quantity" }`. Valida stock; si el mismo producto+talla ya está en el carrito, suma la cantidad.
+- `PUT /api/v1/cart/items/:itemId` — Actualiza la cantidad de un ítem. Body: `{ "quantity" }`. Valida stock.
+- `DELETE /api/v1/cart/items/:itemId` — Elimina un ítem del carrito.
+
+Requiere tablas `carts` y `cart_items` (ver `sql/003_cart_carts_items.sql`).
+
+### Pedidos y pagos (checkout)
+
+Todas las rutas exigen **`Authorization: Bearer <token>`**. Por ahora el pago es **simulado** con una sola opción: **contra entrega**. La estructura de pagos está preparada para añadir después una pasarela (Strategy).
+
+- `POST /api/v1/orders/checkout` — Checkout: convierte el carrito en pedido, registra pago (simulado) y vacía el carrito.  
+  Body: `{ "shippingAddress"? (opcional), "paymentMethod": "CONTRA_ENTREGA" }`.  
+  Respuesta 201: pedido con `items` y `payment` (amount, paymentMethod, status).  
+  Errores: 400 CART_EMPTY, INSUFFICIENT_STOCK, UNSUPPORTED_PAYMENT_METHOD; 402 PAYMENT_FAILED.
+
+- `GET /api/v1/orders` — Lista los pedidos del usuario.
+
+- `GET /api/v1/orders/:id` — Detalle de un pedido (solo si pertenece al usuario), con `payment`.
+
+Requiere tablas `orders`, `order_items` y `payments` (ver `sql/004_orders_payments.sql`). Para añadir más métodos de pago más adelante, se agrega una nueva estrategia en `src/modules/payment/strategies/` y se registra en `strategies/index.js`.
+
 ## Despliegue en Vercel (con GitHub)
 
 El proyecto está preparado para desplegarse en Vercel como función serverless.
@@ -161,5 +187,3 @@ zapatoFlex-Back/
 └── README.md
 ```
 
-
-MIT
