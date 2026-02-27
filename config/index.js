@@ -20,6 +20,8 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   apiPrefix: process.env.API_PREFIX || '/api/v1',
   databaseUrl,
+  jwtSecret: process.env.JWT_SECRET || 'change-me-in-production',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   db: {
     host: dbHost,
     port: dbPort,

@@ -3,6 +3,7 @@ import cors from 'cors';
 import config from '../config/index.js';
 import db from './db/client.js';
 import authRoutes from './modules/auth/auth.routes.js';
+import catalogRoutes from './modules/catalog/catalog.routes.js';
 
 /**
  * Creates and configures the Express application.
@@ -40,6 +41,7 @@ function createApp() {
 
   // API v1: modules
   app.use(`${config.apiPrefix}/auth`, authRoutes);
+  app.use(`${config.apiPrefix}/products`, catalogRoutes);
 
   return app;
 }
