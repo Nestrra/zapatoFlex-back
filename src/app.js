@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import config from '../config/index.js';
+import db from './db/client.js';
 import authRoutes from './modules/auth/auth.routes.js';
 
 /**
@@ -12,9 +13,19 @@ function createApp() {
   app.use(cors());
   app.use(express.json());
 
-  // Health check (useful for cloud deployment and load balancers)
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', service: 'zapatoflex-api', timestamp: new Date().toISOString() });
+  // Health check (incluye estado de la BD si está configurada)
+  app.get('/health', async (_req, res) => {
+    const payload = { status: 'ok', service: 'zapatoflex-api', timestamp: new Date().toISOString() };
+    if (config.databaseUrl) {
+      try {
+        await db.testConnection();
+        payload.db = 'ok';
+      } catch (err) {
+        payload.db = 'error';
+        payload.dbMessage = err.message;
+      }
+    }
+    res.json(payload);
   });
 
   // Root: API info

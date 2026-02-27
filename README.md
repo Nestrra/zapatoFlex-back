@@ -27,6 +27,11 @@ Variables principales:
 | `PORT`        | Puerto del servidor   | `4000`        |
 | `NODE_ENV`    | Entorno (development/production) | `development` |
 | `API_PREFIX`  | Prefijo de la API     | `/api/v1`     |
+| `DB_HOST`     | Host de PostgreSQL    | `localhost`   |
+| `DB_PORT`     | Puerto de PostgreSQL | `5432`        |
+| `DB_USER`     | Usuario de la BD     | —             |
+| `DB_PASSWORD` | Contraseña de la BD  | —             |
+| `DB_NAME`     | Nombre de la base    | —             |
 
 ## Ejecución
 
@@ -45,15 +50,15 @@ Variables principales:
 - `GET /` — Información de la API
 - `GET /health` — Health check para despliegue y balanceadores
 
-### Auth (módulo actual – sin BD, en memoria)
+### Auth (con persistencia en PostgreSQL)
 - `POST /api/v1/auth/register` — Registro de usuario  
   Body: `{ "email", "password", "firstName?", "lastName?" }`  
-  Respuesta 201: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role", "createdAt" } }`
+  Respuesta 201: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role", "createdAt", ... } }`
 - `POST /api/v1/auth/login` — Inicio de sesión  
   Body: `{ "email", "password" }`  
-  Respuesta 200: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role" } }`
+  Respuesta 200: `{ "success": true, "user": { "id", "email", "firstName", "lastName", "role", ... } }`
 
-Los datos de usuarios se mantienen en memoria (se pierden al reiniciar). La persistencia con BD se añadirá en el siguiente paso.
+Requiere PostgreSQL configurado (variables `DB_*` o `DATABASE_URL`) y la tabla `users` creada (ver `sql/001_auth_users_simple.sql`).
 
 ## Despliegue en Vercel (con GitHub)
 
@@ -90,7 +95,7 @@ Cada **push** a la rama conectada (p. ej. `main`) generará un nuevo despliegue 
 
 ### Nota
 
-En Vercel el backend corre como **serverless**: cada petición puede ejecutarse en una instancia distinta. Los usuarios guardados en memoria **no se comparten** entre peticiones y se pierden. Para producción necesitarás base de datos (Paso B de Auth o un servicio como Vercel Postgres, PlanetScale, etc.).
+En Vercel el backend corre como **serverless**. Para que Auth funcione en producción, configura en el proyecto las variables de base de datos (`DATABASE_URL` o `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`) con una BD accesible desde internet (p. ej. Vercel Postgres, Neon, Railway, etc.).
 
 ## Estructura del proyecto (actual)
 
@@ -102,6 +107,10 @@ zapatoFlex-Back/
 ├── src/
 │   ├── modules/
 │   │   └── auth/
+│   │       ├── auth.controller.js
+│   │       ├── auth.repository.js   # Acceso a BD (tabla users)
+│   │       ├── auth.routes.js
+│   │       └── auth.service.js
 │   ├── app.js
 │   └── index.js
 ├── .env.example

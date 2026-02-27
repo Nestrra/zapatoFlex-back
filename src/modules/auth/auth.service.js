@@ -1,31 +1,26 @@
 import bcrypt from 'bcryptjs';
+import authRepository from './auth.repository.js';
 
 const SALT_ROUNDS = 10;
 
-/** In-memory store (replace with Repository when we add DB). */
-const users = [];
-
 /**
- * Auth service: register and login.
- * Passwords are hashed (AUTH-03). No persistence yet.
+ * Auth service: register and login con persistencia en PostgreSQL.
+ * Usa Repository para acceso a datos (desacopla lógica de negocio de la BD).
  */
 async function register({ email, password, firstName, lastName }) {
-  const existing = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  const existing = await authRepository.findByEmail(email);
   if (existing) {
     return { success: false, error: 'EMAIL_ALREADY_EXISTS' };
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = {
-    id: String(users.length + 1),
-    email: email.trim().toLowerCase(),
+  const user = await authRepository.save({
+    email,
     passwordHash,
-    firstName: (firstName || '').trim(),
-    lastName: (lastName || '').trim(),
+    firstName: firstName || '',
+    lastName: lastName || '',
     role: 'CUSTOMER',
-    createdAt: new Date().toISOString(),
-  };
-  users.push(user);
+  });
 
   return {
     success: true,
@@ -34,7 +29,7 @@ async function register({ email, password, firstName, lastName }) {
 }
 
 async function login(email, password) {
-  const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  const user = await authRepository.findByEmail(email);
   if (!user) {
     return { success: false, error: 'INVALID_CREDENTIALS' };
   }
