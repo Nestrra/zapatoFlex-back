@@ -25,5 +25,8 @@ Thumbs.db
 dist/
 coverage/
 
+# SQL scripts (local / no subir al repo)
+sql/
+
 # Vercel
 .vercel
