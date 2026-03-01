@@ -71,8 +71,43 @@ async function save(user) {
   return rowToUser(result.rows[0]);
 }
 
+/**
+ * Actualiza datos del perfil (dirección, teléfono, etc.).
+ */
+async function updateProfile(id, { firstName, lastName, phone, address }) {
+  const pool = db.getPool();
+  const updates = [];
+  const values = [];
+  let pos = 1;
+  if (firstName !== undefined) {
+    updates.push(`first_name = $${pos++}`);
+    values.push(firstName);
+  }
+  if (lastName !== undefined) {
+    updates.push(`last_name = $${pos++}`);
+    values.push(lastName);
+  }
+  if (phone !== undefined) {
+    updates.push(`phone = $${pos++}`);
+    values.push(phone);
+  }
+  if (address !== undefined) {
+    updates.push(`address = $${pos++}`);
+    values.push(address);
+  }
+  if (updates.length === 0) return findById(id);
+  updates.push(`updated_at = now()`);
+  values.push(id);
+  const result = await pool.query(
+    `UPDATE ${TABLE} SET ${updates.join(', ')} WHERE id = $${pos} RETURNING *`,
+    values
+  );
+  return rowToUser(result.rows[0] || null);
+}
+
 export default {
   findByEmail,
   findById,
   save,
+  updateProfile,
 };

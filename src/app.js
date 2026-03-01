@@ -6,6 +6,8 @@ import authRoutes from './modules/auth/auth.routes.js';
 import catalogRoutes from './modules/catalog/catalog.routes.js';
 import cartRoutes from './modules/cart/cart.routes.js';
 import orderRoutes from './modules/order/order.routes.js';
+import authMiddleware from './middleware/auth.js';
+import adminOrdersRoutes from './modules/admin/admin.orders.routes.js';
 
 /**
  * Creates and configures the Express application.
@@ -46,6 +48,12 @@ function createApp() {
   app.use(`${config.apiPrefix}/products`, catalogRoutes);
   app.use(`${config.apiPrefix}/cart`, cartRoutes);
   app.use(`${config.apiPrefix}/orders`, orderRoutes);
+  app.use(
+    `${config.apiPrefix}/admin/orders`,
+    authMiddleware.requireAuth,
+    authMiddleware.requireAdmin,
+    adminOrdersRoutes
+  );
 
   return app;
 }
