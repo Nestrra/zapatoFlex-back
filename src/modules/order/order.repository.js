@@ -77,9 +77,33 @@ async function findByUserId(userId, { limit = 50 } = {}) {
   return result.rows.map((r) => rowToOrder(r));
 }
 
+/** Lista todos los pedidos (para admin). */
+async function findAll({ limit = 50, offset = 0 } = {}) {
+  const pool = db.getPool();
+  const result = await pool.query(
+    `SELECT * FROM ${ORDERS} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+  return result.rows.map((r) => rowToOrder(r));
+}
+
+/** Actualiza el estado del pedido. */
+async function updateStatus(orderId, status) {
+  const pool = db.getPool();
+  const valid = ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+  if (!valid.includes(status)) return null;
+  const result = await pool.query(
+    `UPDATE ${ORDERS} SET status = $1, updated_at = now() WHERE id = $2 RETURNING *`,
+    [status, orderId]
+  );
+  return result.rowCount > 0 ? rowToOrder(result.rows[0]) : null;
+}
+
 export default {
   createOrder,
   createOrderItem,
   findById,
   findByUserId,
+  findAll,
+  updateStatus,
 };

@@ -55,11 +55,24 @@ async function login(email, password) {
 }
 
 function toPublicUser(user) {
+  if (!user) return null;
   const { passwordHash, ...publicUser } = user;
   return publicUser;
+}
+
+async function getMe(userId) {
+  const user = await authRepository.findById(userId);
+  return user ? toPublicUser(user) : null;
+}
+
+async function updateProfile(userId, data) {
+  const user = await authRepository.updateProfile(userId, data);
+  return user ? toPublicUser(user) : null;
 }
 
 export default {
   register,
   login,
+  getMe,
+  updateProfile,
 };

@@ -81,8 +81,32 @@ async function getMyOrders(userId, limit = 50) {
   return orderRepository.findByUserId(userId, { limit });
 }
 
+/** Admin: lista todos los pedidos. */
+async function listAllOrders({ limit = 50, offset = 0 } = {}) {
+  return orderRepository.findAll({ limit, offset });
+}
+
+/** Admin: obtiene cualquier pedido por id (con payment). */
+async function getOrderByIdForAdmin(orderId) {
+  const order = await orderRepository.findById(orderId);
+  if (!order) return null;
+  order.payment = await paymentRepository.findByOrderId(orderId);
+  return order;
+}
+
+/** Admin: actualiza estado del pedido. */
+const VALID_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+
+async function updateOrderStatus(orderId, status) {
+  if (!VALID_STATUSES.includes(status)) return null;
+  return orderRepository.updateStatus(orderId, status);
+}
+
 export default {
   checkout,
   getOrderById,
   getMyOrders,
+  listAllOrders,
+  getOrderByIdForAdmin,
+  updateOrderStatus,
 };

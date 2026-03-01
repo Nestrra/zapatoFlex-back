@@ -1,5 +1,34 @@
 import authService from './auth.service.js';
 
+function getMe(req, res) {
+  const userId = req.user.userId;
+  authService
+    .getMe(userId)
+    .then((user) => {
+      if (!user) return res.status(404).json({ error: 'USER_NOT_FOUND' });
+      res.json(user);
+    })
+    .catch((err) => {
+      console.error('[Auth] getMe error', err);
+      res.status(500).json({ error: 'INTERNAL_ERROR' });
+    });
+}
+
+function updateProfile(req, res) {
+  const userId = req.user.userId;
+  const { firstName, lastName, phone, address } = req.body;
+  authService
+    .updateProfile(userId, { firstName, lastName, phone, address })
+    .then((user) => {
+      if (!user) return res.status(404).json({ error: 'USER_NOT_FOUND' });
+      res.json(user);
+    })
+    .catch((err) => {
+      console.error('[Auth] updateProfile error', err);
+      res.status(500).json({ error: 'INTERNAL_ERROR' });
+    });
+}
+
 function register(req, res) {
   const { email, password, firstName, lastName, role } = req.body;
 
@@ -49,6 +78,8 @@ function login(req, res) {
 }
 
 export default {
+  getMe,
+  updateProfile,
   register,
   login,
 };
